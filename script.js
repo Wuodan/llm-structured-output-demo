@@ -83,7 +83,7 @@ function prefillApiKey(input) {
   }
 }
 
-function handleProcess(elements) {
+async function handleProcess(elements) {
   updateStatus(elements, 'info', 'Sending request…');
   elements.processButton.disabled = true;
   elements.processButton.textContent = 'Processing…';
@@ -109,70 +109,50 @@ function handleProcess(elements) {
     return;
   }
 
-  const payload = buildPayload(systemPrompt, userPrompt, inputText, model);
-  sendRequest(url, apiKeyInput, payload)
-    .then((modelText) => handleModelResponse(modelText, elements))
-    .catch((err) => {
-      elements.responseArea.value = typeof err === 'string' ? err : `Network error: ${err.message}`;
-      renderTable(elements.tableContainer, null);
-      updateStatus(elements, 'error', 'Unable to reach the model endpoint.');
-    })
-    .finally(() => {
-      resetButton(elements.processButton);
-    });
-}
-
-function buildPayload(systemPrompt, userPrompt, inputText, model) {
-  const messages = [];
-  if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
-  const finalUserPrompt = buildUserPrompt(userPrompt, inputText);
-  messages.push({ role: 'user', content: finalUserPrompt });
-  return {
-    model,
-    temperature: 0,
-    messages,
-  };
-}
-
-// Ensures the user prompt always contains the live textarea contents.
-function buildUserPrompt(template, inputText) {
-  if (!template) {
-    return inputText;
-  }
-  if (template.includes('<<<INPUT_TEXTAREA_CONTENT>>>')) {
-    return template.replace(/<<<INPUT_TEXTAREA_CONTENT>>>/g, inputText);
-  }
-  return `${template}\n\n${inputText}`.trim();
-}
-
-// Minimal OpenAI-compatible POST request with bearer auth.
-async function sendRequest(url, apiKey, payload) {
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify(payload),
-  });
-
-  const text = await response.text();
-  if (!response.ok) {
-    throw `HTTP ${response.status} ${response.statusText}\n${text}`;
-  }
-
-  let parsed;
   try {
-    parsed = JSON.parse(text);
-  } catch (err) {
-    throw 'Failed to parse provider response JSON.';
-  }
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKeyInput}`,
+      },
+      body: JSON.stringify(
+        {
+          "model": model,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt },
+            { role: 'user', content: inputText }
+          ]
+        }
+      )
+    });
 
-  const content = parsed?.choices?.[0]?.message?.content;
-  if (!content) {
-    throw 'Provider response did not include any message content.';
+    const responseText = await response.text();
+    if (!response.ok) {
+      throw `HTTP ${response.status} ${response.statusText}\n${responseText}`;
+    }
+
+    let parsed;
+    try {
+      parsed = JSON.parse(responseText);
+    } catch (err) {
+      throw 'Failed to parse provider response JSON.';
+    }
+
+    const content = parsed?.choices?.[0]?.message?.content;
+    if (!content) {
+      throw 'Provider response did not include any message content.';
+    }
+
+    handleModelResponse(content.trim(), elements);
+  } catch (err) {
+    elements.responseArea.value = typeof err === 'string' ? err : `Network error: ${err.message}`;
+    renderTable(elements.tableContainer, null);
+    updateStatus(elements, 'error', 'Unable to reach the model endpoint.');
+  } finally {
+    resetButton(elements.processButton);
   }
-  return content.trim();
 }
 
 function handleModelResponse(modelText, elements) {
