@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Structured Output Demo</title>
+    <style>
+      :root {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: #1f2933;
+        background: #f9fafb;
+      }
+
+      body {
+        margin: 0;
+        padding: 1.5rem;
+      }
+
+      .container {
+        max-width: 900px;
+        margin: 0 auto 3rem;
+      }
+
+      h1 {
+        margin-bottom: 0.25rem;
+      }
+
+      .subtitle {
+        margin-top: 0;
+        font-size: 1.1rem;
+        color: #4b5563;
+      }
+
+      .intro {
+        margin-bottom: 2rem;
+        color: #374151;
+      }
+
+      .panel {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+      }
+
+      .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .panel-header h2 {
+        margin: 0;
+        font-size: 1.1rem;
+      }
+
+      .toggle-btn {
+        background: transparent;
+        border: 1px solid #94a3b8;
+        border-radius: 999px;
+        padding: 0.2rem 0.85rem;
+        cursor: pointer;
+        font-size: 0.9rem;
+      }
+
+      .section-body {
+        margin-top: 0.75rem;
+      }
+
+      label {
+        font-weight: 600;
+        display: block;
+        margin-bottom: 0.35rem;
+      }
+
+      input,
+      textarea,
+      select,
+      button {
+        font-family: inherit;
+      }
+
+      input,
+      textarea,
+      select {
+        width: 100%;
+        border: 1px solid #cbd5f5;
+        border-radius: 6px;
+        padding: 0.5rem 0.65rem;
+        font-size: 0.95rem;
+        box-sizing: border-box;
+      }
+
+      textarea {
+        min-height: 140px;
+        resize: vertical;
+      }
+
+      .stack {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .process-btn {
+        margin-top: 0.5rem;
+        padding: 0.6rem 1.2rem;
+        background: #2563eb;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 1rem;
+      }
+
+      .process-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .status {
+        margin-top: 0.5rem;
+        font-size: 0.9rem;
+      }
+
+      .status[data-status="error"] {
+        color: #b91c1c;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 0.5rem;
+      }
+
+      th,
+      td {
+        border: 1px solid #d1d5db;
+        padding: 0.5rem;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: #f3f4f6;
+      }
+
+      @media (max-width: 600px) {
+        body {
+          padding: 1rem;
+        }
+
+        .panel {
+          padding: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <header class="hero">
+        <h1>Structured Output Demo</h1>
+        <p class="subtitle">Turn unstructured text into JSON and a table (minimal example).</p>
+        <p class="intro">
+          This page calls an LLM with a system + user prompt that requests structured output (JSON).
+          If the JSON is valid, it is shown below and rendered as a table.
+        </p>
+      </header>
+
+      <section class="panel" data-section="explanation">
+        <div class="panel-header">
+          <h2>Explanation</h2>
+          <button type="button" class="toggle-btn" aria-expanded="true" aria-controls="section-explanation">
+            Hide
+          </button>
+        </div>
+        <div class="section-body" id="section-explanation">
+          <p>
+            The prompts instruct the LLM to return <strong>only valid JSON</strong> with a stable schema so we can
+            safely parse and visualize it. This keeps the flow predictable: prompt → LLM JSON → parse → table.
+          </p>
+        </div>
+      </section>
+
+      <section class="panel" data-section="config">
+        <div class="panel-header">
+          <h2>Config</h2>
+          <button type="button" class="toggle-btn" aria-expanded="false" aria-controls="section-config">
+            Show
+          </button>
+        </div>
+        <div class="section-body" id="section-config">
+          <p>Update the endpoint, API key, or model before sending the request. Nothing is stored.</p>
+          <div class="stack">
+            <label for="provider-url">LLM Provider URL</label>
+            <input id="provider-url" name="provider-url" type="url" value="https://openrouter.ai/api/v1/chat/completions" />
+
+            <label for="api-key">API Key</label>
+            <input id="api-key" name="api-key" type="password" />
+
+            <label for="model-name">Model</label>
+            <input id="model-name" name="model-name" type="text" value="qwen/qwen-2.5-coder-32b-instruct:free" />
+          </div>
+          <div id="config-status" class="status" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="panel" data-section="input">
+        <div class="panel-header">
+          <h2>Input</h2>
+          <button type="button" class="toggle-btn" aria-expanded="true" aria-controls="section-input">
+            Hide
+          </button>
+        </div>
+        <div class="section-body" id="section-input">
+          <p>Paste any customer message, then run the structured-output workflow.</p>
+          <label for="customer-input">Customer Message</label>
+          <textarea id="customer-input">
+Hi Support,
+
+I purchased the Aurora Smart Lamp (model A-200) on October 12 from your web store. It connected fine initially, but it no longer joins my Wi-Fi (2.4 GHz). I reset the lamp twice and reinstalled the mobile app. Still no luck. Could you help? My order number should be 78431-DE. If you need more info, let me know.
+
+Thanks,
+Lisa Meyer
+          </textarea>
+          <button id="process-button" class="process-btn" type="button">Process</button>
+        </div>
+      </section>
+
+      <section class="panel" data-section="prompts">
+        <div class="panel-header">
+          <h2>Prompts</h2>
+          <button type="button" class="toggle-btn" aria-expanded="false" aria-controls="section-prompts">
+            Show
+          </button>
+        </div>
+        <div class="section-body" id="section-prompts">
+          <p>These prompts demand structured JSON so the demo can parse it deterministically.</p>
+          <label for="system-prompt">System Prompt</label>
+          <textarea id="system-prompt">
+You are a structured-output assistant for a customer-service system.
+Analyze incoming messages and return ONLY valid JSON with clearly typed fields.
+Return ONLY valid JSON, with no explanations.
+          </textarea>
+
+          <label for="user-prompt">User Prompt</label>
+          <textarea id="user-prompt">
+Classify the customer request below and extract structured fields.
+
+Required JSON keys:
+{
+  "customer_name": string,
+  "issue_category": one of ["technical", "billing", "shipping", "product_question", "other"],
+  "product_name": string | null,
+  "product_model": string | null,
+  "order_number": string | null,
+  "summary": string  // short plain-text summary of the problem
+}
+
+Customer message:
+<<<INPUT_TEXTAREA_CONTENT>>>
+
+Return ONLY valid JSON.
+          </textarea>
+        </div>
+      </section>
+
+      <section class="panel" data-section="response">
+        <div class="panel-header">
+          <h2>Response</h2>
+          <button type="button" class="toggle-btn" aria-expanded="false" aria-controls="section-response">
+            Show
+          </button>
+        </div>
+        <div class="section-body" id="section-response">
+          <p>The raw model response (pretty-printed when valid JSON).</p>
+          <label for="response-area">Model Response</label>
+          <textarea id="response-area" readonly></textarea>
+        </div>
+      </section>
+
+      <section class="panel" data-section="output">
+        <div class="panel-header">
+          <h2>Output</h2>
+          <button type="button" class="toggle-btn" aria-expanded="true" aria-controls="section-output">
+            Hide
+          </button>
+        </div>
+        <div class="section-body" id="section-output">
+          <p>When parsing succeeds, the structured fields appear in this table.</p>
+          <div id="output-table-container" aria-live="polite"></div>
+        </div>
+      </section>
+    </main>
+
+    <script src="script.js" defer></script>
+  </body>
+</html>
