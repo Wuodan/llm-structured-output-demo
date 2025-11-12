@@ -23,7 +23,7 @@
       }
 
       h1 {
-        margin-bottom: 0.35rem;
+        margin: 0 0 0.35rem;
         letter-spacing: -0.3px;
         color: #1a1f28;
       }
@@ -38,6 +38,22 @@
         margin-bottom: 2.2rem;
         color: #4a5565;
         max-width: 70ch;
+      }
+
+      .hero-header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+
+      .hero-note {
+        margin: 0;
+        font-size: 0.9rem;
+        color: #6b7280;
+        text-align: right;
+        padding-top: 0.2rem;
       }
 
       /* Panels */
@@ -193,7 +209,15 @@
   <body>
     <main class="container">
       <header class="hero">
-        <h1>Structured Output Demo</h1>
+        <div class="hero-header">
+          <h1>Structured Output Demo</h1>
+          <p class="hero-note">
+            By Stefan Kuhn:
+            <a href="https://github.com/Wuodan/llm-structured-output-demo" title="project repository" target="_blank" rel="noreferrer"
+              >GitHub</a
+            >.
+          </p>
+        </div>
         <p class="subtitle">Turn unstructured text into JSON and a table (minimal example).</p>
         <p class="intro">
           This page calls an LLM and requests structured output (JSON).<br />
