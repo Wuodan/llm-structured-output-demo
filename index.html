@@ -112,7 +112,6 @@
       }
 
       textarea {
-        min-height: 150px;
         resize: vertical;
       }
 
@@ -197,8 +196,8 @@
         <h1>Structured Output Demo</h1>
         <p class="subtitle">Turn unstructured text into JSON and a table (minimal example).</p>
         <p class="intro">
-          This page calls an LLM with a system + user prompt that requests structured output (JSON).
-          If the JSON is valid, it is shown below and rendered as a table.
+          This page calls an LLM and requests structured output (JSON).<br />
+          The response is parsed and rendered as a table.
         </p>
       </header>
 
@@ -211,8 +210,8 @@
         </div>
         <div class="section-body" id="section-explanation">
           <p>
-            The prompts instruct the LLM to return <strong>only valid JSON</strong> with a stable schema so we can
-            safely parse and visualize it. This keeps the flow predictable: prompt → LLM JSON → parse → table.
+            The prompts instruct the LLM to return <strong>only valid JSON</strong> with a stable schema.<br />
+            This keeps the flow predictable: prompt → LLM JSON → parse → table.
           </p>
         </div>
       </section>
@@ -228,7 +227,7 @@
           <p>Update the endpoint, API key, or model before sending the request. Nothing is stored.</p>
           <div class="stack">
             <label for="provider-url">LLM Provider URL</label>
-            <input id="provider-url" name="provider-url" type="url" value="https://openrouter.ai/api/v1/chat/completions" />
+            <input id="provider-url" name="provider-url" type="url" value="https://openrouter.ai/api/v1" />
 
             <label for="api-key">API Key</label>
             <input id="api-key" name="api-key" type="password" />
@@ -250,10 +249,13 @@
         <div class="section-body" id="section-input">
           <p>Paste any customer message, then run the structured-output workflow.</p>
           <label for="customer-input">Customer Message</label>
-          <textarea id="customer-input">
+          <textarea id="customer-input" rows="9">
 Hi Support,
 
-I purchased the Aurora Smart Lamp (model A-200) on October 12 from your web store. It connected fine initially, but it no longer joins my Wi-Fi (2.4 GHz). I reset the lamp twice and reinstalled the mobile app. Still no luck. Could you help? My order number should be 78431-DE. If you need more info, let me know.
+I purchased the Aurora Smart Lamp (model A-200) on October 12 from your web store. It connected
+fine initially, but it no longer joins my Wi-Fi (2.4 GHz). I reset the lamp twice and reinstalled
+the mobile app. Still no luck. Could you help? My order number should be 78431-DE. If you need
+more info, let me know.
 
 Thanks,
 Lisa Meyer
@@ -272,14 +274,14 @@ Lisa Meyer
         <div class="section-body" id="section-prompts">
           <p>These prompts demand structured JSON so the demo can parse it deterministically.</p>
           <label for="system-prompt">System Prompt</label>
-          <textarea id="system-prompt">
+          <textarea id="system-prompt" rows="3">
 You are a structured-output assistant for a customer-service system.
 Analyze incoming messages and return ONLY valid JSON with clearly typed fields.
 Return ONLY valid JSON, with no explanations.
           </textarea>
 
           <label for="user-prompt">User Prompt</label>
-          <textarea id="user-prompt">
+          <textarea id="user-prompt" rows="13">
 Classify the customer request below and extract structured fields.
 
 Required JSON keys:
@@ -307,7 +309,7 @@ Customer message:
         <div class="section-body" id="section-response">
           <p>The raw model response (pretty-printed when valid JSON).</p>
           <label for="response-area">Model Response</label>
-          <textarea id="response-area" readonly></textarea>
+          <textarea id="response-area" rows="9" readonly></textarea>
         </div>
       </section>
 
@@ -438,7 +440,7 @@ Customer message:
         }
 
         try {
-          const response = await fetch(url, {
+          const response = await fetch(url + '/chat/completions', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
